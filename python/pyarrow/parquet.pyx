@@ -90,7 +90,7 @@ def read_table(source, columns=None):
     return reader.read_all()
 
 
-def write_table(table, filename, chunk_size=None, version=None):
+def write_table(table, filename, chunk_size=None, version=None, use_dictionary=True):
     """
     Write a Table to Parquet format
 
@@ -102,6 +102,9 @@ def write_table(table, filename, chunk_size=None, version=None):
         The maximum number of rows in each Parquet RowGroup
     version : {"1.0", "2.0"}, default "1.0"
         The Parquet format version, defaults to 1.0
+    use_dictionary : bool or list
+        Specify if we should use dictionary encoding in general or only for
+        some columns.
     """
     cdef Table table_ = table
     cdef CTable* ctable_ = table_.table
@@ -120,6 +123,17 @@ def write_table(table, filename, chunk_size=None, version=None):
             properties_builder.version(PARQUET_2_0)
         else:
             raise ArrowException("Unsupported Parquet format version")
+
+    if isinstance(use_dictionary, bool):
+        if use_dictionary:
+            properties_builder.enable_dictionary()
+        else:
+            properties_builder.disable_dictionary()
+    else:
+        # Deactivate dictionary encoding by default
+        properties_builder.disable_dictionary()
+        for column in use_dictionary:
+            properties_builder.enable_dictionary(column)
 
     sink.reset(new LocalFileOutputStream(tobytes(filename)))
     with nogil:

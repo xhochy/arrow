@@ -87,6 +87,9 @@ cdef extern from "parquet/api/writer.h" namespace "parquet" nogil:
 
     cdef cppclass WriterProperties:
         cppclass Builder:
+            Builder* disable_dictionary()
+            Builder* enable_dictionary()
+            Builder* enable_dictionary(const c_string& path)
             Builder* version(ParquetVersion version)
             shared_ptr[WriterProperties] build()
 
