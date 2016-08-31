@@ -150,7 +150,7 @@ Status FileWriter::Impl::TypedWriteBatch(::parquet::ColumnWriter* column_writer,
   } else {
     return Status::NotImplemented("no support for max definition level > 1 yet");
   }
-  PARQUET_CATCH_NOT_OK(writer->Close());
+  // PARQUET_CATCH_NOT_OK(writer->Close());
   return Status::OK();
 }
 

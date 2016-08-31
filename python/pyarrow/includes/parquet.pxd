@@ -113,7 +113,7 @@ cdef extern from "arrow/parquet/reader.h" namespace "arrow::parquet" nogil:
 
     cdef cppclass FileReader:
         FileReader(MemoryPool* pool, unique_ptr[ParquetFileReader] reader)
-        CStatus ReadFlatTable(shared_ptr[CTable]* out);
+        CStatus ReadFlatTable(shared_ptr[CTable]* out) except +;
 
 
 cdef extern from "arrow/parquet/schema.h" namespace "arrow::parquet" nogil:
