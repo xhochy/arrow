@@ -126,4 +126,4 @@ cdef extern from "arrow/parquet/schema.h" namespace "arrow::parquet" nogil:
 cdef extern from "arrow/parquet/writer.h" namespace "arrow::parquet" nogil:
     cdef CStatus WriteFlatTable(const CTable* table, MemoryPool* pool,
             const shared_ptr[OutputStream]& sink, int64_t chunk_size,
-            const shared_ptr[WriterProperties]& properties)
+            const shared_ptr[WriterProperties]& properties) except +
