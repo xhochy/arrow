@@ -90,7 +90,7 @@ def read_table(source, columns=None):
     return reader.read_all()
 
 
-def write_table(table, filename, chunk_size=None, version=None, use_dictionary=True):
+def write_table(table, filename, chunk_size=None, version=None, use_dictionary=True, compression=None):
     """
     Write a Table to Parquet format
 
@@ -105,6 +105,8 @@ def write_table(table, filename, chunk_size=None, version=None, use_dictionary=T
     use_dictionary : bool or list
         Specify if we should use dictionary encoding in general or only for
         some columns.
+    compression : str or dict
+        Specify the compression codec, either on a general basis or per-column.
     """
     cdef Table table_ = table
     cdef CTable* ctable_ = table_.table
@@ -134,6 +136,36 @@ def write_table(table, filename, chunk_size=None, version=None, use_dictionary=T
         properties_builder.disable_dictionary()
         for column in use_dictionary:
             properties_builder.enable_dictionary(column)
+
+    if isinstance(compression, basestring):
+        if compression == "NONE":
+            properties_builder.compression(UNCOMPRESSED)
+        elif compression == "SNAPPY":
+            properties_builder.compression(SNAPPY)
+        elif compression == "GZIP":
+            properties_builder.compression(GZIP)
+        elif compression == "LZO":
+            properties_builder.compression(LZO)
+        elif compression == "BROTLI":
+            properties_builder.compression(BROTLI)
+        else:
+            raise ArrowException("Unsupport compression codec")
+    elif compression is not None:
+        # Deactivate dictionary encoding by default
+        properties_builder.disable_dictionary()
+        for column, codec in compression.iteritems():
+            if codec == "NONE":
+                properties_builder.compression(column, UNCOMPRESSED)
+            elif codec == "SNAPPY":
+                properties_builder.compression(column, SNAPPY)
+            elif codec == "GZIP":
+                properties_builder.compression(column, GZIP)
+            elif codec == "LZO":
+                properties_builder.compression(column, LZO)
+            elif codec == "BROTLI":
+                properties_builder.compression(column, BROTLI)
+            else:
+                raise ArrowException("Unsupport compression codec")
 
     sink.reset(new LocalFileOutputStream(tobytes(filename)))
     with nogil:
