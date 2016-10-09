@@ -169,6 +169,7 @@ def write_table(table, filename, chunk_size=None, version=None,
                 raise ArrowException("Unsupport compression codec")
 
     sink.reset(new LocalFileOutputStream(tobytes(filename)))
-    with nogil:
+    # with nogil:
+    if True:
         check_cstatus(WriteFlatTable(ctable_, default_memory_pool(), sink,
             chunk_size_, properties_builder.build()))
