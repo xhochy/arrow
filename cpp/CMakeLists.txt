@@ -247,7 +247,7 @@ include_directories(src)
 include(GenerateExportHeader)
 
 # Sets -fvisibility=hidden for gcc
-add_compiler_export_flags()
+# add_compiler_export_flags()
 
 ############################################################
 # Benchmarking
