@@ -19,7 +19,7 @@ FROM maven:3.5.2-jdk-8-slim
 # Basic OS utilities
 RUN apt-get update && apt-get install -y \
         wget \
-        git g++ cmake \
+        git g++ cmake ninja-build \
         libjemalloc-dev libboost-dev \
         libboost-filesystem-dev libboost-system-dev
 
@@ -33,7 +33,7 @@ RUN wget -O /tmp/miniconda.sh \
 ENV PATH="/home/ubuntu/miniconda/bin:${PATH}"
 RUN conda create -y -q -n pyarrow-dev \
     python=3.5 numpy six setuptools cython pandas pytest \
-    cmake flatbuffers rapidjson boost-cpp thrift-cpp snappy zlib \
+    cmake flatbuffers rapidjson boost-cpp thrift-cpp=0.10.0 snappy zlib \
     gflags brotli jemalloc lz4-c zstd -c conda-forge
 
 ADD . /apache-arrow

@@ -16,40 +16,36 @@
 # limitations under the License.
 #
 
+set -ex
+
 # Set up environment and working directory
 cd /apache-arrow
-
-export ARROW_BUILD_TYPE=release
-export ARROW_HOME=$(pwd)/arrow
-CONDA_BASE=/home/ubuntu/miniconda
-export LD_LIBRARY_PATH=${ARROW_HOME}/lib:${CONDA_BASE}/lib:${LD_LIBRARY_PATH}
-export PYTHONPATH=${ARROW_HOME}/python:${PYTHONPATH}
-export MAVEN_OPTS="-Xmx2g -XX:ReservedCodeCacheSize=512m"
 
 # Activate our pyarrow-dev conda env
 source activate pyarrow-dev
 
+export ARROW_BUILD_TYPE=release
+export ARROW_HOME=$(pwd)/arrow-spark-dist
+export ARROW_BUILD_TOOLCHAIN=$CONDA_PREFIX
+export MAVEN_OPTS="-Xmx2g -XX:ReservedCodeCacheSize=512m"
+export HOME=/tmp
+export USER=nobody
+
 # Build arrow-cpp and install
-pushd arrow/cpp
-rm -rf build/*
-mkdir -p build
-cd build/
-cmake -DARROW_PYTHON=on -DARROW_HDFS=on -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$ARROW_HOME ..
-make -j4
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
-make install
-popd
+#pushd arrow/cpp
+#rm -rf build-spark-integration
+#mkdir build-spark-integration
+#cd build-spark-integration/
+#cmake -DARROW_BUILD_TESTS=OFF -DARROW_PYTHON=on -DARROW_HDFS=on -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${ARROW_HOME} -GNinja ..
+#ninja
+#ninja install
+#popd
 
 # Build pyarrow and install inplace
-pushd arrow/python
-python setup.py clean
-python setup.py build_ext --build-type=release --inplace
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
-popd
+#pushd arrow/python
+#python setup.py clean
+#python setup.py build_ext --build-type=release --inplace
+#popd
 
 # Install Arrow to local maven repo and get the version
 pushd arrow/java
@@ -58,6 +54,13 @@ mvn -DskipTests -Drat.skip=true clean install
 ARROW_VERSION=`mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version | sed -n -e '/^\[.*\]/ !{ /^[0-9]/ { p; q } }'`
 echo "Using Arrow version $ARROW_VERSION"
 popd
+
+exit 0
+
+# Workaround for
+#   [error] /apache-arrow/spark/core/src/main/scala/org/apache/spark/deploy/security/HadoopFSDelegationTokenProvider.scala:97: File name too long
+#   [error] This can happen on some encrypted or legacy file systems.  Please see SI-3623 for more details.
+pushd /tmp
 
 # Build Spark with Arrow
 SPARK_REPO=https://github.com/apache/spark.git
