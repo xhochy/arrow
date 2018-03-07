@@ -777,11 +777,7 @@ cdef class StringArray(Array):
 
     @staticmethod
     def from_buffers(int length, Buffer value_offsets, Buffer data,
-<<<<<<< HEAD
-                     Buffer null_bitmap=None, int null_count=0,
-=======
                      Buffer null_bitmap=None, int null_count=-1,
->>>>>>> xhochy/ARROW-2282
                      int offset=0):
         """
         Construct a StringArray from value_offsets and data buffers.
@@ -806,11 +802,8 @@ cdef class StringArray(Array):
 
         if null_bitmap is not None:
             c_null_bitmap = null_bitmap.buffer
-<<<<<<< HEAD
-=======
         else:
             null_count = 0
->>>>>>> xhochy/ARROW-2282
 
         out.reset(new CStringArray(
             length, value_offsets.buffer, data.buffer, c_null_bitmap,

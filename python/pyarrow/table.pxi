@@ -78,12 +78,13 @@ cdef class ChunkedArray:
         return self.chunked_array.null_count()
 
     def __getitem__(self, key):
-        cdef int64_t item, i
+        cdef int64_t item
+        cdef int i
         self._check_nullptr()
         if isinstance(key, slice):
             return _normalize_slice(self, key)
-        else:
-            item = int(key)
+        elif isinstance(key, six.integer_types):
+            item = key
             if item >= self.chunked_array.length() or item < 0:
                 return IndexError("ChunkedArray selection out of bounds")
             for i in range(self.num_chunks):
@@ -91,6 +92,8 @@ cdef class ChunkedArray:
                     return self.chunk(i)[item]
                 else:
                     item -= self.chunked_array.chunk(i).get().length()
+        else:
+          raise TypeError("key must either be a slice or integer")
 
     def slice(self, offset=0, length=None):
         """
