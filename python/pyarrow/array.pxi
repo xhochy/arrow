@@ -483,13 +483,15 @@ cdef class Array:
         with nogil:
             check_status(ValidateArray(deref(self.ap)))
 
-    def offset(self):
-        """
-        A relative position into another array's data, to enable zero-copy
-        slicing. This value defaults to zero but must be applied on all
-        operations with the physical storage buffers.
-        """
-        return self.sp_array.get().offset()
+    property offset:
+
+        def __get__(self):
+            """
+            A relative position into another array's data, to enable zero-copy
+            slicing. This value defaults to zero but must be applied on all
+            operations with the physical storage buffers.
+            """
+            return self.sp_array.get().offset()
 
     def buffers(self):
         """
@@ -775,7 +777,11 @@ cdef class StringArray(Array):
 
     @staticmethod
     def from_buffers(int length, Buffer value_offsets, Buffer data,
+<<<<<<< HEAD
                      Buffer null_bitmap=None, int null_count=0,
+=======
+                     Buffer null_bitmap=None, int null_count=-1,
+>>>>>>> xhochy/ARROW-2282
                      int offset=0):
         """
         Construct a StringArray from value_offsets and data buffers.
@@ -800,6 +806,11 @@ cdef class StringArray(Array):
 
         if null_bitmap is not None:
             c_null_bitmap = null_bitmap.buffer
+<<<<<<< HEAD
+=======
+        else:
+            null_count = 0
+>>>>>>> xhochy/ARROW-2282
 
         out.reset(new CStringArray(
             length, value_offsets.buffer, data.buffer, c_null_bitmap,

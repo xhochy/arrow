@@ -265,9 +265,17 @@ def test_string_from_buffers():
     copied = pa.StringArray.from_buffers(
         len(array), buffers[1], buffers[2], buffers[0], array.null_count,
         array.offset)
-
-    assert array == copied
     assert copied.to_pylist() == ["a", None, "b", "c"]
+
+    copied = pa.StringArray.from_buffers(
+        len(array), buffers[1], buffers[2], buffers[0])
+    assert copied.to_pylist() == ["a", None, "b", "c"]
+
+    sliced = array[1:]
+    copied = pa.StringArray.from_buffers(
+        len(sliced), buffers[1], buffers[2], buffers[0], -1, sliced.offset)
+    buffers = array.buffers()
+    assert copied.to_pylist() == [None, "b", "c"]
 
 
 def _check_cast_case(case, safe=True):
@@ -615,7 +623,11 @@ def test_buffers_primitive():
     # Slicing does not affect the buffers but the offset
     a_sliced = a[1:]
     buffers = a_sliced.buffers()
+<<<<<<< HEAD
     a_sliced.offset() == 1
+=======
+    a_sliced.offset == 1
+>>>>>>> xhochy/ARROW-2282
     assert len(buffers) == 2
     null_bitmap = buffers[0].to_pybytes()
     assert 1 <= len(null_bitmap) <= 64  # XXX this is varying
