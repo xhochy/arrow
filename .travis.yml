@@ -55,6 +55,7 @@ matrix:
     - ARROW_TRAVIS_PYTHON_BENCHMARKS=1
     - ARROW_TRAVIS_PYTHON_DOCS=1
     - ARROW_BUILD_WARNING_LEVEL=CHECKIN
+    - ARROW_TRAVIS_CHECK_ABI=1
     - CC="clang-5.0"
     - CXX="clang++-5.0"
     before_script:
@@ -69,137 +70,144 @@ matrix:
     - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
     script:
     - if [ $ARROW_CI_CPP_AFFECTED == "1" ]; then $TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_build_parquet_cpp.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 2.7
-    - $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 3.6
+      #- $TRAVIS_BUILD_DIR/ci/travis_build_parquet_cpp.sh
+      #- $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 2.7
+      #- $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 3.6
+    deploy:
+      provider: bintray
+      file: ci/abi_descriptor.json
+      user: xhochy
+      skip_cleanup: true
+      key:
+        secure: "jEYAybNuLcgzMxQBtxuRTNOx+mNnCvGkRd0jajnnHfRq6acD/gY87BFVJ3Z208CAQLvxKWfL3V737F0qVWEKRYTJLq2fp093zXC8tmdnbnPz+w41fjbHia9XDEsidkwxLGQ5tBCArcBRIL77PGVolLybYZ7+jfNy/Kb9MIhOXf0L7hGgmKqKXKLM1le4spIIALfsBDfoUFPk3+mI2yAa8LDm9bRQz+DOshcRazc6FD/6wsYY3JooKMFaKcXbh5o6tqt1uyAHlnv5ra0ejfT6zh7MfAB4GzHlu+eHglPHomn4M3G7frf6VAKnN23D54Zdq2KT8cdBLV+n23Tl0lT+aGDf6iNO9B1pe08TlQc8szb8d2Br7y1ZoJlakNm2xZEkrztceIZDIFnJNxP1iRwqrApEWTVsK4S5TJBMtX8aWC6NK7i+mf64b95peJUWkaATDENYrpcMvlTGcf/MCQo7hhBvJvNkD3DB5qSJny4+EfaC726qeJnzbeRxUDoyXuVQuGLmLBTe+/NicO0qJIm7Kg1CQkVjvByWvboFePi/KxYOA6PjQRGeZ3j2SGtZg9azblgqWYNgxnxcCPeklHIDntISocpOopX3VUFw6sWfwkt9CeZzVL8DA9GfyvDOaLVMVvkHVDf6XUSEX8C3hruBg/Q4I/gIxUIp9QHdCivuhRc="
   # [OS X] C++ & Python w/ XCode 6.4
-  - compiler: clang
-    language: cpp
-    osx_image: xcode6.4
-    os: osx
-    cache:
-    addons:
-    env:
-    - ARROW_TRAVIS_USE_TOOLCHAIN=1
-    - ARROW_TRAVIS_PLASMA=1
-    - ARROW_TRAVIS_ORC=1
-    - ARROW_BUILD_WARNING_LEVEL=CHECKIN
-    before_script:
-    - if [ $ARROW_CI_PYTHON_AFFECTED != "1" ]; then exit; fi
-    # If either C++ or Python changed, we must install the C++ libraries
-    - travis_wait 50 $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
-    script:
-    - if [ $ARROW_CI_CPP_AFFECTED == "1" ]; then $TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_build_parquet_cpp.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 2.7
-    - $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 3.6
-  # [manylinux1] Python
-  - language: cpp
-    before_script:
-    - if [ $ARROW_CI_PYTHON_AFFECTED == "1" ]; then docker pull quay.io/xhochy/arrow_manylinux1_x86_64_base:latest; fi
-    script:
-    - if [ $ARROW_CI_PYTHON_AFFECTED == "1" ]; then $TRAVIS_BUILD_DIR/ci/travis_script_manylinux.sh; fi
-  # Java w/ OpenJDK 7
-  - language: java
-    os: linux
-    jdk: openjdk7
-    before_script:
-    - if [ $ARROW_CI_JAVA_AFFECTED != "1" ]; then exit; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_java.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_script_javadoc.sh
-  # Java w/ Oracle JDK 9
-  - language: java
-    os: linux
-    jdk: oraclejdk9
-    before_script:
-    - if [ $ARROW_CI_JAVA_AFFECTED != "1" ]; then exit; fi
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_java.sh
-    addons:
-      apt:
-        packages:
-          - oracle-java9-installer
-  # Integration w/ OpenJDK 8
-  - language: java
-    os: linux
-    env: ARROW_TEST_GROUP=integration
-    jdk: openjdk8
-    env:
-    - CC="clang-5.0"
-    - CXX="clang++-5.0"
-    before_script:
-    - if [ $ARROW_CI_INTEGRATION_AFFECTED != "1" ]; then exit; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_install_clang_tools.sh
-    - nvm install node
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_js.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_integration.sh
-  # NodeJS
-  - language: node_js
-    os: linux
-    node_js: node
-    before_script:
-    - if [ $ARROW_CI_JS_AFFECTED != "1" ]; then exit; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_js.sh
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_js.sh
-  # C++ & glib w/ gcc 4.9 & autotools
-  - compiler: gcc
-    language: cpp
-    os: linux
-    env:
-    - BUILD_SYSTEM=autotools BUILD_TORCH_EXAMPLE=no
-    - CC="gcc-4.9"
-    - CXX="g++-4.9"
-    before_script:
-    - if [ $ARROW_CI_C_GLIB_AFFECTED != "1" ]; then exit; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh --only-library
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_c_glib.sh
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_c_glib.sh
-  # C++ & glib w/ gcc 4.9 & meson
-  - compiler: gcc
-    language: cpp
-    os: linux
-    env:
-    - BUILD_SYSTEM=meson BUILD_TORCH_EXAMPLE=no
-    - CC="gcc-4.9"
-    - CXX="g++-4.9"
-    before_script:
-    - if [ $ARROW_CI_C_GLIB_AFFECTED != "1" ]; then exit; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh --only-library
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_c_glib.sh
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_c_glib.sh
-  # [OS X] C++ & glib w/ XCode 8.3 & autotools & homebrew
-  - compiler: clang
-    osx_image: xcode8.3
-    os: osx
-    cache:
-    addons:
-    rvm: 2.2
-    env:
-    - BUILD_SYSTEM=autotools
-    before_script:
-    - if [ $ARROW_CI_C_GLIB_AFFECTED != "1" ]; then exit; fi
-    - $TRAVIS_BUILD_DIR/ci/travis_install_osx.sh
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh --only-library --homebrew
-    - $TRAVIS_BUILD_DIR/ci/travis_before_script_c_glib.sh
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_c_glib.sh
-  - language: rust
-    rust: stable
-    before_script:
-    - if [ $ARROW_CI_RUST_AFFECTED != "1" ]; then exit; fi
-    script:
-    - $TRAVIS_BUILD_DIR/ci/travis_script_rust.sh
+  #  - compiler: clang
+  #    language: cpp
+  #    osx_image: xcode6.4
+  #    os: osx
+  #    cache:
+  #    addons:
+  #    env:
+  #    - ARROW_TRAVIS_USE_TOOLCHAIN=1
+  #    - ARROW_TRAVIS_PLASMA=1
+  #    - ARROW_TRAVIS_ORC=1
+  #    - ARROW_BUILD_WARNING_LEVEL=CHECKIN
+  #    before_script:
+  #    - if [ $ARROW_CI_PYTHON_AFFECTED != "1" ]; then exit; fi
+  #    # If either C++ or Python changed, we must install the C++ libraries
+  #    - travis_wait 50 $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
+  #    script:
+  #    - if [ $ARROW_CI_CPP_AFFECTED == "1" ]; then $TRAVIS_BUILD_DIR/ci/travis_script_cpp.sh; fi
+  #    - $TRAVIS_BUILD_DIR/ci/travis_build_parquet_cpp.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 2.7
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_python.sh 3.6
+  #  # [manylinux1] Python
+  #  - language: cpp
+  #    before_script:
+  #    - if [ $ARROW_CI_PYTHON_AFFECTED == "1" ]; then docker pull quay.io/xhochy/arrow_manylinux1_x86_64_base:latest; fi
+  #    script:
+  #    - if [ $ARROW_CI_PYTHON_AFFECTED == "1" ]; then $TRAVIS_BUILD_DIR/ci/travis_script_manylinux.sh; fi
+  #  # Java w/ OpenJDK 7
+  #  - language: java
+  #    os: linux
+  #    jdk: openjdk7
+  #    before_script:
+  #    - if [ $ARROW_CI_JAVA_AFFECTED != "1" ]; then exit; fi
+  #    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_java.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_javadoc.sh
+  #  # Java w/ Oracle JDK 9
+  #  - language: java
+  #    os: linux
+  #    jdk: oraclejdk9
+  #    before_script:
+  #    - if [ $ARROW_CI_JAVA_AFFECTED != "1" ]; then exit; fi
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_java.sh
+  #    addons:
+  #      apt:
+  #        packages:
+  #          - oracle-java9-installer
+  #  # Integration w/ OpenJDK 8
+  #  - language: java
+  #    os: linux
+  #    env: ARROW_TEST_GROUP=integration
+  #    jdk: openjdk8
+  #    env:
+  #    - CC="clang-5.0"
+  #    - CXX="clang++-5.0"
+  #    before_script:
+  #    - if [ $ARROW_CI_INTEGRATION_AFFECTED != "1" ]; then exit; fi
+  #    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_install_clang_tools.sh
+  #    - nvm install node
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_js.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_integration.sh
+  #  # NodeJS
+  #  - language: node_js
+  #    os: linux
+  #    node_js: node
+  #    before_script:
+  #    - if [ $ARROW_CI_JS_AFFECTED != "1" ]; then exit; fi
+  #    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_js.sh
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_js.sh
+  #  # C++ & glib w/ gcc 4.9 & autotools
+  #  - compiler: gcc
+  #    language: cpp
+  #    os: linux
+  #    env:
+  #    - BUILD_SYSTEM=autotools BUILD_TORCH_EXAMPLE=no
+  #    - CC="gcc-4.9"
+  #    - CXX="g++-4.9"
+  #    before_script:
+  #    - if [ $ARROW_CI_C_GLIB_AFFECTED != "1" ]; then exit; fi
+  #    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh --only-library
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_c_glib.sh
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_c_glib.sh
+  #  # C++ & glib w/ gcc 4.9 & meson
+  #  - compiler: gcc
+  #    language: cpp
+  #    os: linux
+  #    env:
+  #    - BUILD_SYSTEM=meson BUILD_TORCH_EXAMPLE=no
+  #    - CC="gcc-4.9"
+  #    - CXX="g++-4.9"
+  #    before_script:
+  #    - if [ $ARROW_CI_C_GLIB_AFFECTED != "1" ]; then exit; fi
+  #    - $TRAVIS_BUILD_DIR/ci/travis_install_linux.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh --only-library
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_c_glib.sh
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_c_glib.sh
+  #  # [OS X] C++ & glib w/ XCode 8.3 & autotools & homebrew
+  #  - compiler: clang
+  #    osx_image: xcode8.3
+  #    os: osx
+  #    cache:
+  #    addons:
+  #    rvm: 2.2
+  #    env:
+  #    - BUILD_SYSTEM=autotools
+  #    before_script:
+  #    - if [ $ARROW_CI_C_GLIB_AFFECTED != "1" ]; then exit; fi
+  #    - $TRAVIS_BUILD_DIR/ci/travis_install_osx.sh
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_cpp.sh --only-library --homebrew
+  #    - $TRAVIS_BUILD_DIR/ci/travis_before_script_c_glib.sh
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_c_glib.sh
+  #  - language: rust
+  #    rust: stable
+  #    before_script:
+  #    - if [ $ARROW_CI_RUST_AFFECTED != "1" ]; then exit; fi
+  #    script:
+  #    - $TRAVIS_BUILD_DIR/ci/travis_script_rust.sh
 
 after_failure:
 - COREFILE=$(find . -maxdepth 2 -name "core*" | head -n 1)
