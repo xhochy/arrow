@@ -97,7 +97,7 @@ tasks:
     platform: osx
     template: conda-recipes/travis.osx.yml
     params:
-      config: osx_c_compilerclangcxx_compilerclangxxpython2.7
+      config: osx_python2.7
     artifacts:
       - arrow-cpp-{no_rc_version}-py27(h[a-z0-9]+)_0.tar.bz2
       - pyarrow-{no_rc_version}-py27(h[a-z0-9]+)_0.tar.bz2
